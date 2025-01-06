@@ -1,0 +1,293 @@
+---
+title: "Project_2"
+author: "Rahul"
+date: "2024-04-24"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+setwd("C:/Users/rahul/OneDrive/Desktop/Notes/SS-24/ICS/Project_2")
+
+```
+#Loadind and setups
+
+```{r, echo = TRUE}
+
+library(haven)
+library(ggplot2)
+library(dplyr)
+
+dataset <- read_sav("Sandwich.sav")
+
+# Renaming the covariates
+names(dataset) <- c("Ants", "Bread", "Topping", "Butter")
+
+dataset$Bread <- as.factor(dataset$Bread)
+levels(dataset$Bread) <- c("wholegrain", "multigrain", "rye", "white bread")
+
+dataset$Topping <- as.factor(dataset$Topping)
+levels(dataset$Topping) <- c("ham pickles", "peanut butter", "yeast spread")
+
+dataset$Butter <- as.factor(dataset$Butter)
+levels(dataset$Butter) <- c ("with", "without")
+
+names(dataset)
+summary(dataset)
+```
+
+#Box Plots for each factor
+
+```{r, echo = TRUE}
+# Bread 
+gg.Bread <- ggplot(dataset, aes(x = Bread, y = Ants)) +
+  geom_boxplot(fill = "skyblue", color = "blue") +
+  stat_summary(fun = mean, geom = "point", shape = 4, size = 3, 
+               color = "black") +  # Add mean point
+  labs(x = "", y = "Number of Ants"
+       # , title = "Box Plot of Ants by Bread type"
+       ) +
+  theme_minimal()
+
+
+
+# Toppings
+gg.Topping <- ggplot(dataset, aes(x = Topping, y = Ants)) +
+  geom_boxplot(fill = "lightgreen", color = "darkgreen") +
+  stat_summary(fun = mean, geom = "point", shape = 4, size = 3, 
+               color = "black") +  # Add mean point
+  labs(x = "", y = "Number of Ants"
+       # , title = "Box Plot of Ants by Topping type"
+       ) +
+  theme_minimal()
+
+
+
+# Butter
+gg.Butter <- ggplot(dataset, aes(x = Butter, y = Ants)) +
+  geom_boxplot(fill = "lightpink", color = "red") +
+  stat_summary(fun = mean, geom = "point", shape = 4, size = 3, 
+               color = "black") +  # Add mean point
+  labs(x = "", y = "Number of Ants"
+       # , title = "Box Plot of Ants by with or without Butter"
+       ) +
+  theme_minimal()
+
+
+
+gg.Bread; gg.Topping; gg.Butter 
+
+```
+
+
+
+# Test Assumptions
+1 Equal variance among the groups.
+2 The data is normally distributed
+3 The data is independent.
+
+#Statistical Summary for each factor
+```{r, echo = TRUE}
+
+#Bread : 4 levels
+summary.Brot <- dataset %>% group_by(Bread) %>%
+  summarise(
+    count = n(),
+    min = min(Ants, na.rm = TRUE),
+    # Q1  = quantile(Ants,0.25),
+    median = median(Ants, na.rm = TRUE),
+    # Q3  = quantile(Ants,0.75),
+    max  = max(Ants, na.rm = TRUE),
+    mean = mean(Ants, na.rm = TRUE),
+    sd = sd(Ants, na.rm = TRUE)
+    # ,
+    # IQR = quantile(Ants,0.75) - quantile(Ants,0.25)
+  )
+print(summary.Brot)
+
+summary.Brot$sd
+
+summary.Brot$sd[-2][3] - summary.Brot$sd[-2][2]
+
+
+#Topping : 3 levels
+summary.Topping <- dataset %>% group_by(Topping) %>%
+  summarise(
+    count = n(),
+    min = min(Ants, na.rm = TRUE),
+    # Q1  = quantile(Ants,0.25),
+    median = median(Ants, na.rm = TRUE),
+    # Q3  = quantile(Ants,0.75),
+    max  = max(Ants, na.rm = TRUE),
+    mean = mean(Ants, na.rm = TRUE),
+    sd = sd(Ants, na.rm = TRUE)
+    # ,
+    # IQR = quantile(Ants,0.75) - quantile(Ants,0.25)
+  )
+print(summary.Topping)
+
+summary.Topping$sd
+max(summary.Topping$sd) - min(summary.Topping$sd)
+
+
+#Butter : 2 levels
+summary.Butter <- dataset %>% group_by(Butter) %>%
+  summarise(
+    count = n(),
+    min = min(Ants, na.rm = TRUE),
+    # Q1  = quantile(Ants,0.25),
+    median = median(Ants, na.rm = TRUE),
+    # Q3  = quantile(Ants,0.75),
+    max  = max(Ants, na.rm = TRUE),
+    mean = mean(Ants, na.rm = TRUE),
+    sd = sd(Ants, na.rm = TRUE)
+    # ,
+    # IQR = quantile(Ants,0.75) - quantile(Ants,0.25)
+  )
+print(summary.Butter)
+
+```
+
+# QQ plot for normality test for each factor and their levels
+
+```{r, echo = TRUE}
+# Brot(Bread) QQ
+qq_plot_Bread <- ggplot(dataset, aes(sample = Ants, color = Bread)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(title = "QQ Plot : Ants by Bread type") +
+  facet_wrap(~ Bread) +  # Create separate plots for each category of Bread
+  theme_minimal() +  # Set theme to minimal
+  theme(plot.title = element_text(size = 12), legend.position = "none") + # Decrease title font size
+  xlab("Theoretical Quantiles") +  # Add x-axis label
+  ylab("Sample Quantiles")
+
+
+
+
+# Belag(Topping) QQ
+qq_plot_Topping <- ggplot(dataset, aes(sample = Ants, color = Topping)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(title = "QQ Plot : Ants by Topping type") +
+  facet_wrap(~ Topping) +  # Create separate plots for each category of Belag
+  theme_minimal() +  # Set theme to minimal
+  theme(plot.title = element_text(size = 12), legend.position = "none")  + # Decrease title font size
+  xlab("Theoretical Quantiles") +  # Add x-axis label
+  ylab("Sample Quantiles")
+
+
+
+
+# Butter QQ
+qq_plot_Butter <- ggplot(dataset, aes(sample = Ants, color = Butter)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(title = "QQ Plots : Ants by with or without Butter") +
+  facet_wrap(~ Butter) +  # Create separate plots for each category of Butter
+  theme_minimal() +  # Set theme to minimal
+  theme(plot.title = element_text(size = 12), legend.position = "none") + # Decrease title font size
+  xlab("Theoretical Quantiles") +  # Add x-axis label
+  ylab("Sample Quantiles")
+
+
+qq_plot_Bread; qq_plot_Topping; qq_plot_Butter
+```
+
+
+#ANOVA compares the mean in different group are equal or not
+# ie. We will test for each factor with different levels 
+
+```{r, echo = TRUE}
+
+# Step 1: Load necessary libraries
+library(stats)    # For statistical functions
+
+#ANOVA - Bread
+cat("Bread Group \n")
+Bread_anova <- aov(Ants ~ Bread, data = dataset)
+summary(Bread_anova)
+
+summary_Bread_anova <- summary(Bread_anova)
+summary_Bread_anova[[1]]$`Pr(>F)`[1]
+
+
+
+
+
+#ANOVA - Topping
+cat("\n Topping Group \n")
+Topping_anova <- aov(Ants ~ Topping, data = dataset)
+summary(Topping_anova)
+
+
+# Summarize ANOVA results
+summary_Topping_anova <- summary(Topping_anova)
+
+# Extract p-value
+summary_Topping_anova[[1]]$`Pr(>F)`[1]
+
+
+
+```
+
+## T-test for each factor with different levels 
+# ie. pair-wise t test among different levels
+
+
+```{r, echo = TRUE}
+
+# Pairwise T-test for Topping ===================================
+
+# To store p-values for each combination of levels of Topping
+unadjusted.p.values <- c() 
+
+
+## (1) "ham pickles"   &   (2) "peanut butter"
+t.Topping.H01 <- t.test(dataset$Ants[dataset$Topping == "ham pickles"], 
+       dataset$Ants[dataset$Topping == "peanut butter"], 
+       alternative = "two.sided", paired = FALSE, var.equal = TRUE)
+
+unadjusted.p.values[1] <- t.Topping.H01$p.value
+
+
+
+## (1) "ham pickles"   &   (3) "yeast spread"
+t.Topping.H02 <- t.test(dataset$Ants[dataset$Topping == "ham pickles"], 
+       dataset$Ants[dataset$Topping == "yeast spread"], 
+       alternative = "two.sided", paired = FALSE, var.equal = TRUE)
+
+unadjusted.p.values[2] <- t.Topping.H02$p.value
+
+
+
+## (2) "peanut butter"   &   (3) "yeast spread"
+t.Topping.H03 <- t.test(dataset$Ants[dataset$Topping == "peanut butter"], 
+       dataset$Ants[dataset$Topping == "yeast spread"], 
+       alternative = "two.sided", paired = FALSE, var.equal = TRUE)
+
+unadjusted.p.values[3] <- t.Topping.H03$p.value
+
+
+# adjusting p-values with "bonferroni" method
+adjusted.p.values <- p.adjust(unadjusted.p.values, method = "bonferroni")
+adjusted.p.values
+
+## Which is nothing but ....
+unadjusted.p.values * 3
+
+# T-test for Butter ===================================
+# For Butter : No adjustment needed -----------------------------
+t.Butter.H01 <- t.test(dataset$Ants[dataset$Butter == "with"], 
+       dataset$Ants[dataset$Butter == "without"], 
+       alternative = "two.sided", paired = FALSE, var.equal = TRUE)
+
+t.Butter.H01$p.value
+
+
+```
+
